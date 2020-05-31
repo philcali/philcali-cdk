@@ -1,0 +1,20 @@
+# Static Website
+
+Pulls in CDK contructs to simplify static website creation.
+
+## Example
+
+```
+import * as website from '@philcali-cdk/static-website';
+import * as acm from '@aws-cdk/aws-certificatemanager';
+import * as route53 from '@aws-cdk/aws-route53';
+
+const staticWebsite = new website.StaticWebsite(stack, 'StaticWebsite', {
+  domainName: 'adventure.philcali.me',
+  certificate: acm.Certificate.fromArn('arn:aws:acm:mycert', stack),
+  hostedZone: route53.HostedZone.fromHostedZoneAttributes(stack, 'PersonalHZ', {
+    hostedZoneId: 'ZXXXXXXXXXXXX',
+    zoneName: 'philcali.me'
+  });
+});
+```

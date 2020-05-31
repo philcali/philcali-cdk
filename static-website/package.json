@@ -1,0 +1,69 @@
+{
+  "name": "@philcali-cdk/static-website",
+  "version": "0.0.1",
+  "description": "Simple little CDK glue for static websites.",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "scripts": {
+    "build": "jsii",
+    "build:watch": "jsii -w",
+    "package": "jsii-pacmak"
+  },
+  "jsii": {
+    "outdir": "dist",
+    "targets": {
+      "python": {
+        "distName": "me.philcali.cdk.website",
+        "module": "me.philcali.cdk.website"
+      },
+      "java": {
+        "package": "me.philcali.cdk.website",
+        "maven": {
+          "groupId": "me.philcali.cdk",
+          "artifactId": "website"
+        }
+      }
+    }
+  },
+  "author": {
+    "name": "Philip Cali"
+  },
+  "keywords": [
+    "aws",
+    "cdk",
+    "static",
+    "website"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/philcali/philcali-cdk.git",
+    "directory": "static-website"
+  },
+  "devDependencies": {
+    "jsii": "^1.5.0",
+    "jsii-pacmak": "^1.5.0"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-certificatemanager": "^1.42.0",
+    "@aws-cdk/aws-cloudfront": "^1.42.0",
+    "@aws-cdk/aws-iam": "^1.42.0",
+    "@aws-cdk/aws-lambda": "^1.42.0",
+    "@aws-cdk/aws-lambda-event-sources": "^1.42.0",
+    "@aws-cdk/aws-route53": "^1.42.0",
+    "@aws-cdk/aws-s3": "^1.42.0",
+    "@aws-cdk/core": "^1.42.0",
+    "constructs": "^3.0.3"
+  },
+  "peerDependencies": {
+    "@aws-cdk/aws-certificatemanager": "^1.42.0",
+    "@aws-cdk/aws-cloudfront": "^1.42.0",
+    "@aws-cdk/aws-iam": "^1.42.0",
+    "@aws-cdk/aws-lambda": "^1.42.0",
+    "@aws-cdk/aws-lambda-event-sources": "^1.42.0",
+    "@aws-cdk/aws-route53": "^1.42.0",
+    "@aws-cdk/aws-s3": "^1.42.0",
+    "@aws-cdk/core": "^1.42.0",
+    "constructs": "^3.0.3"
+  }
+}
