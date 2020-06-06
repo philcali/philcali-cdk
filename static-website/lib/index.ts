@@ -41,18 +41,18 @@ export interface StaticWebsiteProps {
 
 export class StaticWebsite extends cdk.Construct {
 
-  readonly content: s3.Bucket;
+  readonly content: s3.IBucket;
 
-  readonly distribution: cloudfront.CloudFrontWebDistribution;
+  readonly distribution: cloudfront.IDistribution;
 
-  readonly invalidation: lambda.Function;
+  readonly invalidation: lambda.IFunction;
 
   readonly recordSet: route53.IRecordSet;
 
   constructor(scope: cdk.Construct, id: string, props: StaticWebsiteProps) {
     super(scope, id);
 
-    this.invalidation = new lambda.Function(this, 'Invalidation', {
+    const invalidation = new lambda.Function(this, 'Invalidation', {
       handler: 'index.handler',
       runtime: lambda.Runtime.NODEJS_10_X,
       code: lambda.Code.fromInline(INVALIDATE_CODE),
@@ -60,7 +60,7 @@ export class StaticWebsite extends cdk.Construct {
       memorySize: 128
     });
 
-    this.content = new s3.Bucket(this, 'StaticWebsite', {
+    const content = new s3.Bucket(this, 'StaticWebsite', {
       cors: [{
         allowedOrigins: [ '*' ],
         allowedMethods: [
@@ -76,47 +76,52 @@ export class StaticWebsite extends cdk.Construct {
 
     const originAccessIdentity = new cloudfront.OriginAccessIdentity(this, 'OAI');
 
-    this.distribution = new cloudfront.CloudFrontWebDistribution(this, 'StaticWebsiteCDN', {
+    const distribution = new cloudfront.CloudFrontWebDistribution(this, 'StaticWebsiteCDN', {
       viewerCertificate: cloudfront.ViewerCertificate.fromAcmCertificate(props.certificate, {
         aliases: [ props.domainName ],
         securityPolicy: cloudfront.SecurityPolicyProtocol.TLS_V1_1_2016
       }),
       originConfigs: [{
         s3OriginSource: {
-          s3BucketSource: this.content,
+          s3BucketSource: content,
           originAccessIdentity
         },
         behaviors: [{ isDefaultBehavior: true }]
       }]
     });
 
-    const stack = cdk.Stack.of(this.invalidation);
+    const stack = cdk.Stack.of(invalidation);
 
-    this.invalidation.addEnvironment('CDN', this.distribution.distributionId);
-    this.invalidation.addToRolePolicy(new iam.PolicyStatement({
+    invalidation.addEnvironment('CDN', distribution.distributionId);
+    invalidation.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       actions: [ 'cloudfront:createInvalidation' ],
       resources: [ stack.formatArn({
         service: 'cloudfront',
         region: '',
-        resource: `distribution/${this.distribution.distributionId}`,
+        resource: `distribution/${distribution.distributionId}`,
         sep: ':'
       }) ]
     }));
 
 
-    this.invalidation.addEventSource(new events.S3EventSource(this.content, {
+    invalidation.addEventSource(new events.S3EventSource(content, {
       events: [ s3.EventType.OBJECT_CREATED ],
       filters: [{
         suffix: 'index.html'
       }]
     }));
 
-    this.recordSet = new route53.CnameRecord(this, 'StaticWebsiteCNAME', {
-      domainName: this.distribution.domainName,
+    const recordSet = new route53.CnameRecord(this, 'StaticWebsiteCNAME', {
+      domainName: distribution.domainName,
       recordName: props.domainName,
       zone: props.hostedZone,
       ttl: cdk.Duration.minutes(5)
     });
+
+    this.content = content;
+    this.distribution = distribution;
+    this.recordSet = recordSet;
+    this.invalidation = invalidation;
   }
 }
