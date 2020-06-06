@@ -1,6 +1,6 @@
 {
   "name": "@philcali-cdk/static-website",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Simple little CDK glue for static websites.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
