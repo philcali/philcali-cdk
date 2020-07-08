@@ -1,12 +1,78 @@
-# Welcome to your CDK TypeScript Construct Library project!
+# IoT Registry
 
-You should explore the contents of this project. It demonstrates a CDK Construct Library that includes a construct (`IotRegistry`)
-which contains an Amazon SQS queue that is subscribed to an Amazon SNS topic.
+Simply CDK bindings for IoT.
 
-The construct defines an interface (`IotRegistryProps`) to configure the visibility timeout of the queue.
+## Example
 
-## Useful commands
+### Basic Bindings
 
- * `npm run build`   compile typescript to js
- * `npm run watch`   watch for changes and compile
- * `npm run test`    perform the jest unit tests
+```
+import * as iot from '@philcali-cdk/iot-registry';
+
+// Simply create a thing
+const thing = new Thing(stack, 'MyThing');
+// Add attribute
+thing.addAttribute("key", "value");
+
+// Simply create a cert
+const cert = new Certificate(thing, 'Cert', {
+  status: 'ACTIVE',
+  certificateSigningRequest: csr
+});
+
+// Simply create a policy
+const policy = new Policy(cert, 'Policy', {
+  policyName: thing.thingName + '_policy',
+  policyDocument: new iam.PolicyDocument({
+    statements: [
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [ 's3:*' ],
+        resources: [ '*' ]
+      })
+    ]
+  })
+});
+
+// Attach to a policy
+cert.attachToPolicy(policy);
+// Attach to a thing
+const certifiedThing = thing.attachToCertificate(cert);
+```
+
+### Certificate Authority
+
+```
+import * as iot from '@philcali-cdk/iot-registry';
+
+const certificateAuthority = ... // Use a resource as a cert generator
+
+// Certify a cert for a construct in the tree (like a thing or a pool)
+// This creates a cert for the stack
+const cert = certificateAuthority.certify(stack);
+const thing = cert.attachToThing(new Thing(stack, 'Thing'));
+```
+
+### Thing Pool
+
+Use CDK's Construct concept to group resources together, ideal for
+grouping thing policies.
+
+```
+import * as iot from '@philcali-cdk/iot-registry';
+
+const certificates = ... // Use a resource as a cert generator
+const document = new iam.PolicyDocument({
+  statements: [
+    new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [ 's3:*' ],
+      resources: [ '*' ]
+    })
+  ]
+});
+
+const thingPool = new ThingPool(stack, 'ThingPool', { certificates, document });
+
+const thing = thingPool.create('Thing1');
+```
