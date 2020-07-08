@@ -47,8 +47,8 @@ export class S3CertificateAuthority extends cdk.Resource implements ICertificate
     });
   }
 
-  certify(scope: cdk.Construct): ICertificate {
-    const customCertificate = new cdk.CustomResource(scope, 'Cert', {
+  certify(scope: cdk.IConstruct): ICertificate {
+    const customCertificate = new cdk.CustomResource(this, scope.node.id, {
       serviceToken: this.certificateAuthorityProvider.serviceToken,
       properties: {
         'ThingName': scope.node.path

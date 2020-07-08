@@ -1,14 +1,15 @@
 import * as iot from '@aws-cdk/aws-iot';
 import * as cdk from '@aws-cdk/core';
-import { ICertificate } from './certificate';
+import { IAttachable, ICertificate } from './certificate';
 
 type AttributeMap = { [key: string]: string };
 
-export interface IThing {
-  readonly type: string
+export interface IThing extends cdk.IResource {
   readonly thingName: string
 
   attachToCertificate(certificate: ICertificate): ICertifiedThing
+
+  attachPrincipal(attachable: IAttachable): void
 }
 
 export interface ICertifiedThing {
@@ -17,67 +18,56 @@ export interface ICertifiedThing {
 }
 
 export interface ThingProps {
-  readonly type: string
   readonly thingName?: string
   readonly attributes?: AttributeMap
 }
 
-export interface FromThingNameOptions {
-  readonly type: string
-}
+abstract class ThingBase extends cdk.Resource implements IThing {
+  public abstract readonly thingName: string;
 
-export class Thing extends cdk.Resource implements IThing {
-  readonly thingName: string
-  readonly type: string
-  private readonly attributes: AttributeMap
-
-  public static attachPrincipal(scope: cdk.Construct, id: string, principal: string, thing: IThing) {
-    new iot.CfnThingPrincipalAttachment(scope, `Attach${id}ToThing`, {
-      principal,
-      thingName: thing.thingName
+  public attachPrincipal(attachable: IAttachable) {
+    new iot.CfnThingPrincipalAttachment(this, `Attach${attachable.type}ToThing`, {
+      principal: attachable.principal,
+      thingName: this.thingName
     });
   }
 
-  public static fromThingName(scope: cdk.Construct, id: string, thingName: string, props: FromThingNameOptions): IThing {
-    class Import extends cdk.Resource implements IThing {
+  public attachToCertificate(certificate: ICertificate): ICertifiedThing {
+    this.attachPrincipal(certificate);
+    return {
+      thing: this,
+      certificate
+    };
+  }
+}
+
+export class Thing extends ThingBase {
+  readonly thingName: string
+  private readonly attributes: AttributeMap
+
+  public static fromThingName(scope: cdk.Construct, id: string, thingName: string): IThing {
+    class Import extends ThingBase {
       readonly thingName: string = thingName;
-      readonly type: string = props.type;
-      attachToCertificate(certificate: ICertificate) {
-        Thing.attachPrincipal(scope, 'Cert', certificate.certificateArn, this);
-        return {
-          thing: this,
-          certificate
-        };
-      }
     }
     return new Import(scope, id);
   }
 
-  constructor(scope: cdk.Construct, id: string, props: ThingProps) {
+  constructor(scope: cdk.Construct, id: string, props?: ThingProps) {
     super(scope, id);
 
-    let thingName: string | undefined = props.thingName;
-    this.attributes = props.attributes || {};
+    let thingName: string | undefined = props?.thingName;
+    this.attributes = props?.attributes || {};
     const device = new iot.CfnThing(this, 'Thing', {
       thingName,
       attributePayload: {
         attributes: this.attributes
       }
     });
-    this.type = props.type;
     this.thingName = device.ref;
   }
 
   public addAttribute(key: string, value: string): Thing {
     this.attributes[key] = value;
     return this;
-  }
-
-  public attachToCertificate(certificate: ICertificate): ICertifiedThing {
-    Thing.attachPrincipal(this, 'Cert', certificate.certificateArn, this);
-    return {
-      thing: this,
-      certificate
-    };
   }
 }
