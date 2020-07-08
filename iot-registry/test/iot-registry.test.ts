@@ -56,7 +56,7 @@ test('IoT S3 Certificate Storage', () => {
   expectCDK(stack).to(haveResource("AWS::S3::Bucket"));
   expectCDK(stack).to(haveResource("AWS::Lambda::Function"));
   expectCDK(stack).to(haveResource("AWS::IAM::Role"));
-  expectCDK(stack).to(haveResource("AWS::Iot::Policy"));
+  expectCDK(stack).to(haveResource("AWS::IoT::Policy"));
   expectCDK(stack).to(haveResource("AWS::IoT::PolicyPrincipalAttachment"));
   expectCDK(stack).to(haveResource("AWS::IoT::ThingPrincipalAttachment"));
   expectCDK(stack).to(haveResource("AWS::CloudFormation::CustomResource"));
