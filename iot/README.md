@@ -1,13 +1,13 @@
-# IoT Registry
+# IoT
 
-Simply CDK bindings for IoT.
+Simply CDK bindings for IoT for small scale thing registration.
 
 ## Example
 
 ### Basic Bindings
 
 ```
-import * as iot from '@philcali-cdk/iot-registry';
+import * as iot from '@philcali-cdk/iot';
 
 // Simply create a thing
 const thing = new Thing(stack, 'MyThing');
@@ -43,7 +43,7 @@ const certifiedThing = thing.attachToCertificate(cert);
 ### Certificate Authority
 
 ```
-import * as iot from '@philcali-cdk/iot-registry';
+import * as iot from '@philcali-cdk/iot';
 
 const certificateAuthority = ... // Use a resource as a cert generator
 
@@ -59,7 +59,7 @@ Use CDK's Construct concept to group resources together, ideal for
 grouping thing policies.
 
 ```
-import * as iot from '@philcali-cdk/iot-registry';
+import * as iot from '@philcali-cdk/iot';
 
 const certificates = ... // Use a resource as a cert generator
 const document = new iam.PolicyDocument({

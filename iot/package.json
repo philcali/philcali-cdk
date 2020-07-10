@@ -1,5 +1,5 @@
 {
-  "name": "@philcali-cdk/iot-registry",
+  "name": "@philcali-cdk/iot",
   "version": "0.0.1",
   "description": "Simple building block for small scale IoT registration",
   "main": "lib/index.js",
@@ -10,8 +10,7 @@
   "keywords": [
     "aws",
     "cdk",
-    "iot",
-    "registry"
+    "iot"
   ],
   "scripts": {
     "build": "tsc",
@@ -19,8 +18,13 @@
     "test": "jest"
   },
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/philcali/philcali-cdk.git",
+    "directory": "iot"
+  },
   "devDependencies": {
-    "@aws-cdk/assert": "1.49.1",
+    "@aws-cdk/assert": "^1.42.0",
     "@types/jest": "^25.2.1",
     "@types/node": "10.17.5",
     "jest": "^25.5.0",
@@ -28,15 +32,15 @@
     "typescript": "~3.7.2"
   },
   "peerDependencies": {
-    "@aws-cdk/core": "1.49.1"
+    "@aws-cdk/core": "^1.42.0"
   },
   "dependencies": {
-    "@aws-cdk/aws-iam": "1.49.1",
-    "@aws-cdk/aws-iot": "1.49.1",
-    "@aws-cdk/aws-lambda": "1.49.1",
-    "@aws-cdk/aws-logs": "1.49.1",
-    "@aws-cdk/aws-s3": "1.49.1",
-    "@aws-cdk/core": "1.49.1",
-    "@aws-cdk/custom-resources": "1.49.1"
+    "@aws-cdk/aws-iam": "^1.42.0",
+    "@aws-cdk/aws-iot": "^1.42.0",
+    "@aws-cdk/aws-lambda": "^1.42.0",
+    "@aws-cdk/aws-logs": "^1.42.0",
+    "@aws-cdk/aws-s3": "^1.42.0",
+    "@aws-cdk/core": "^1.42.0",
+    "@aws-cdk/custom-resources": "^1.42.0"
   }
 }
