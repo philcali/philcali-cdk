@@ -1,45 +1,89 @@
 import * as greengrass from '@aws-cdk/aws-greengrass';
 import * as cdk from '@aws-cdk/core';
 import { Permission } from './function';
+import { lazyHash } from './hash';
 import { Tags } from './tag';
 
 export interface IResourceDefinition {
-  readonly name: string;
-  readonly versionId: string;
-  addResource(resource: ResourceProps): IResourceDefinition;
+  readonly definitionId: string;
+  readonly definitionArn: string;
+  readonly versionArn?: string;
 }
 
-export class ResourceDefinition extends cdk.Resource implements IResourceDefinition {
-  readonly name: string
-  readonly versionId: string
+export interface IResourceDefinitionVersion {
+  readonly versionArn: string;
+}
+
+export interface ResourceDefinitionVersionProps {
+  readonly resources?: Array<ResourceProps>;
+  readonly definition: IResourceDefinition;
+}
+
+type ResourceLike = (
+  greengrass.CfnResourceDefinition.ResourceInstanceProperty |
+  greengrass.CfnResourceDefinitionVersion.ResourceInstanceProperty
+);
+
+function transformResource(scope: cdk.Construct, resource: ResourceProps): ResourceLike {
+  return {
+    ...resource,
+    id: resource.id || lazyHash(`${scope.node.id}-${resource.name}`)
+  };
+}
+
+export class ResourceDefinitionVersion extends cdk.Resource implements IResourceDefinitionVersion {
+  readonly versionArn: string;
   private resources: Array<greengrass.CfnResourceDefinitionVersion.ResourceInstanceProperty>
 
-  constructor(scope: cdk.Resource, id: string, props?: ResourceDefinitionProps) {
+  constructor(scope: cdk.Construct, id: string, props: ResourceDefinitionVersionProps) {
     super(scope, id);
     this.resources = [];
     if (props?.resources) {
       props.resources.forEach(this.addResource.bind(this));
     }
-    const definition = new greengrass.CfnResourceDefinition(this, 'Definition', {
-      name: props?.name || id,
-      tags: props?.tags
-    });
-    this.name = definition.ref;
-    const version = new greengrass.CfnResourceDefinitionVersion(definition, 'Version', {
-      resourceDefinitionId: definition.ref,
+
+    const version = new greengrass.CfnResourceDefinitionVersion(this, 'Version', {
+      resourceDefinitionId: props.definition.definitionId,
       resources: this.resources
     });
-    this.versionId = version.ref;
+    this.versionArn = version.ref;
   }
 
-  addResource(resource: ResourceProps): IResourceDefinition {
-    this.resources.push(resource);
+  addResource(resource: ResourceProps): ResourceDefinitionVersion {
+    this.resources.push(transformResource(this, resource));
     return this;
   }
 }
 
+export class ResourceDefinition extends cdk.Resource implements IResourceDefinition {
+  readonly definitionId: string
+  readonly definitionArn: string
+  readonly versionArn?: string;
+
+  constructor(scope: cdk.Construct, id: string, props?: ResourceDefinitionProps) {
+    super(scope, id);
+
+    let initialVersion: greengrass.CfnResourceDefinition.ResourceDefinitionVersionProperty | undefined;
+    if (props?.resources) {
+      initialVersion = {
+        resources: props.resources.map(resource => transformResource(this, resource))
+      };
+    }
+
+    const definition = new greengrass.CfnResourceDefinition(this, 'Definition', {
+      name: props?.name || id,
+      tags: props?.tags,
+      initialVersion
+    });
+
+    this.definitionId = definition.ref;
+    this.definitionArn = definition.attrArn;
+    this.versionArn = definition.attrLatestVersionArn;
+  }
+}
+
 export interface ResourceProps {
-  readonly id: string
+  readonly id?: string
   readonly name: string
   readonly resourceDataContainer: LocalVolumeResourceData
     | LocalDeviceResourceData

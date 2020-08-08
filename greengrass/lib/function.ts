@@ -1,12 +1,23 @@
 import * as greengrass from '@aws-cdk/aws-greengrass';
 import * as lambda from '@aws-cdk/aws-lambda';
 import * as cdk from '@aws-cdk/core';
+import { lazyHash } from './hash';
 import { Tags } from './tag';
 
 export interface IFunctionDefinition extends cdk.IResource {
-  readonly name: string;
-  readonly versionId: string;
-  addFunction(func: FunctionProps): IFunctionDefinition;
+  readonly defintiionId: string;
+  readonly definitionArn: string;
+  readonly versionArn?: string;
+}
+
+export interface IFunctionDefinitionVersion extends cdk.IResource {
+  readonly versionArn: string;
+}
+
+export interface FunctionDefinitionVersionProps {
+  readonly definition: IFunctionDefinition;
+  readonly defaultConfig?: DefaultConfigProps;
+  readonly functions?: Array<FunctionProps>;
 }
 
 export interface FunctionDefinitionProps {
@@ -16,44 +27,75 @@ export interface FunctionDefinitionProps {
   readonly tags?: Tags;
 }
 
-export class FunctionDefinition extends cdk.Resource implements IFunctionDefinition {
-  readonly name: string
-  readonly versionId: string
+type FunctionLike = (
+  greengrass.CfnFunctionDefinition.FunctionProperty |
+  greengrass.CfnFunctionDefinitionVersion.FunctionProperty
+);
+
+function transformFunction(scope: cdk.Construct, func: FunctionProps): FunctionLike {
+  return {...func,
+    id: func.id || lazyHash(`${scope.node.id}-${func.version.functionName}-${func.version.version}`),
+    functionArn: func.version.version,
+    functionConfiguration: {...func.config,
+      timeout: func.config.timeout?.toSeconds()
+    }
+  };
+}
+
+export class FunctionDefinitionVersion extends cdk.Resource implements IFunctionDefinitionVersion {
+  readonly versionArn: string;
   private functions: Array<greengrass.CfnFunctionDefinitionVersion.FunctionProperty>
 
-  constructor(scope: cdk.Resource, id: string, props?: FunctionDefinitionProps) {
+  constructor(scope: cdk.Construct, id: string, props: FunctionDefinitionVersionProps) {
     super(scope, id);
-
     this.functions = [];
-    if (props?.functions) {
-      props?.functions.forEach(this.addFunction.bind(this));
+    if (props.functions) {
+      props.functions.forEach(this.addFunction.bind(this));
     }
-    const definition = new greengrass.CfnFunctionDefinition(this, 'Defintiion', {
-      name: props?.name || id,
-      tags: props?.tags
-    });
-    this.name = definition.ref;
-    const version = new greengrass.CfnFunctionDefinitionVersion(definition, 'Version', {
-      functionDefinitionId: this.name,
+    const version = new greengrass.CfnFunctionDefinitionVersion(this, 'Version', {
+      functionDefinitionId: props.definition.defintiionId,
       defaultConfig: props?.defaultConfig,
       functions: this.functions
     });
-    this.versionId = version.ref;
+    this.versionArn = version.ref;
   }
 
-  addFunction(func: FunctionProps): IFunctionDefinition {
-    this.functions.push({...func,
-      functionArn: func.version.version,
-      functionConfiguration: {...func.config,
-        timeout: func.config.timeout?.toSeconds()
-      }
-    });
+  addFunction(func: FunctionProps): FunctionDefinitionVersion {
+    this.functions.push(transformFunction(this, func));
     return this;
   }
 }
 
+export class FunctionDefinition extends cdk.Resource implements IFunctionDefinition {
+  readonly defintiionId: string
+  readonly definitionArn: string
+  readonly versionArn?: string;
+
+  constructor(scope: cdk.Construct, id: string, props?: FunctionDefinitionProps) {
+    super(scope, id);
+
+    let initialVersion: greengrass.CfnFunctionDefinition.FunctionDefinitionVersionProperty | undefined;
+    if (props?.functions) {
+      initialVersion = {
+        defaultConfig: props?.defaultConfig,
+        functions: props?.functions.map(func => transformFunction(this, func))
+      };
+    }
+
+    const definition = new greengrass.CfnFunctionDefinition(this, 'Defintiion', {
+      name: props?.name || id,
+      tags: props?.tags,
+      initialVersion
+    });
+
+    this.defintiionId = definition.ref;
+    this.definitionArn = definition.attrArn;
+    this.versionArn = definition.attrLatestVersionArn;
+  }
+}
+
 export interface FunctionProps {
-  readonly id: string;
+  readonly id?: string;
   readonly version: lambda.IVersion;
   readonly config: FunctionConfigProps;
 }

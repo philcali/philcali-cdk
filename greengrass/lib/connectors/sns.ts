@@ -6,8 +6,8 @@ export class SNS extends Connector {
   public static VERSIONS = [ 4, 3, 2, 1 ]
   public static LATEST_VERSION = SNS.VERSIONS[0];
 
-  constructor(scope: cdk.IResource, id: string, props: SNSProps) {
-    super(scope, id, props.version, {
+  constructor(scope: cdk.IResource, props: SNSProps) {
+    super(scope, props.version, {
       DefaultSNSArn: props.defaultSNSArn,
       IsolationMode: props.isolationMode
     });

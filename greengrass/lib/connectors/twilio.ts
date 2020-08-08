@@ -6,8 +6,8 @@ export class TwilioNotifications extends Connector {
   public static VERSIONS = [ 5, 4, 3, 2, 1 ]
   public static LATEST_VERSION = TwilioNotifications.VERSIONS[0];
 
-  constructor(scope: cdk.IResource, id: string, props: TwilioNotificationsProps) {
-    super(scope, id, props.version, {
+  constructor(scope: cdk.IResource, props: TwilioNotificationsProps) {
+    super(scope, props.version, {
       'TWILIO_ACCOUNT_SID': props.twilioAccountSid,
       'TwilioAuthTokenSecretArn': props.twilioAuthTokenSecretArn,
       'TwilioAuthTokenSecretArn-ResourceId': props.twilioAuthTokenSecretArnResourceId,

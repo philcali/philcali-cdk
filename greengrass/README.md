@@ -52,45 +52,28 @@ const messageTransformerVersion = new lambda.Version(stack, 'MessageTransformer'
 });
 
 // Associate to Greengrass
-const group = new greengrass.Group(stack, 'SmartHomeGroup');
-const version = group.addVersion();
-
-version.addCore(new greengrass.CoreDefinition(group, 'Core')
-  .setCore(core));
-
-version.addDevices(new greengrass.DeviceDefinition(group, 'Devices')
-  .addDevice(motionSensor)
-  .addDevice(camera));
-
-version.addConnectors(new greengrass.ConnectorDefinition(group, 'Connectors')
-  .addConnector(snsConnector));
-
-version.addFunctions(new greengrass.FuncionDefinition(group, 'Functions')
-  .addFunction({
+const group = new greengrass.Group(stack, 'SmartHomeGroup', {
+  core,
+  devices: [ motionSensor, camera ],
+  connectors: [ snsConnector ],
+  functions: [{
     version: messageTransformerVersion,
     config: {
-      timeout: cdk.Duration.toSeconds(15)
+      timeout: cdk.Duration.seconds(15)
     }
-  });
-
-// Wire things up with subscriptions
-version.addSubscriptions(new greengrass.SubscriptionDefinition(group, 'Subscriptions')
-  // Signal camera to capture video
-  .addSubscription({
+  }],
+  subscriptions: [{
     subject: 'home/motion',
-    source: new greengrass.ThingMQTTEntity(motionSensor),
-    target: new greengrass.ThingMQTTEntity(camera)
-  })
-  // Signal lambda that video is captured
-  .addSubscription({
+    source: motionSensor,
+    target: camera
+  }, {
     subject: 'home/motion/captured',
-    source: new greengrass.ThingMQTTEntity(camera),
-    target: new greengrass.LambdaMQTTEntity(messageTransformerVersion)
-  })
-  // Signal transform capture signal to human notification for SNS
-  .addSubscription({
+    source: camera,
+    target: messageTransformerVersion
+  }, {
     subject: 'sns/message',
-    source: new greengrass.LambdaMQTTEntity(messageTransformerVersion),
-    target: new greengrass.ConnectorMQTTEntity(snsConnector)
-  });
+    source: messageTransformerVersion,
+    target: snsConnector
+  }]
+});
 ```

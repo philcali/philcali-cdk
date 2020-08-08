@@ -6,8 +6,8 @@ export class RaspberryPiGPIO extends Connector {
   public static VERSIONS = [ 3, 2, 1 ]
   public static LATEST_VERSION = RaspberryPiGPIO.VERSIONS[0];
 
-  constructor(scope: cdk.IResource, id: string, props: RaspberryPiGPIOProps) {
-    super(scope, id, props.version, {
+  constructor(scope: cdk.IResource, props: RaspberryPiGPIOProps) {
+    super(scope, props.version, {
       'GpioMem-ResourceId': props.gpioMemResourceId,
       'InputPollPeriod': props.inputPollPeriod,
       'InputGpios': props.inputPins?.join(','),
