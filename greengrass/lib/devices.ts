@@ -2,7 +2,8 @@ import * as greengrass from '@aws-cdk/aws-greengrass';
 import * as iot from '@philcali-cdk/iot';
 import * as cdk from '@aws-cdk/core';
 import { Tags } from './tag';
-import { lazyHash } from './hash';
+import { GreengrassDevice } from './thing';
+import { transformDevice } from './types';
 
 export interface IDeviceDefinition extends cdk.IResource {
   readonly definitionId: string
@@ -16,31 +17,13 @@ export interface IDeviceDefinitionVersion extends cdk.IResource {
 
 export interface DeviceDefinitionProps {
   readonly name?: string;
-  readonly devices?: Array<iot.ICertifiedThing>;
+  readonly devices?: Array<GreengrassDevice>;
   readonly tags?: Tags
 }
 
 export interface DeviceDefintiionVersionProps {
   readonly definition: IDeviceDefinition
-  readonly devices?: Array<iot.ICertifiedThing>;
-}
-
-type DeviceLike = (
-  greengrass.CfnDeviceDefinition.DeviceProperty |
-  greengrass.CfnDeviceDefinitionVersion.DeviceProperty
-);
-
-function transformDevice(scope: cdk.Construct, device: iot.ICertifiedThing): DeviceLike {
-  return {
-      certificateArn: device.certificate.certificateArn,
-      id: lazyHash(`${scope.node.id}-${device.thing.thingName}`),
-      thingArn: cdk.Stack.of(scope).formatArn({
-        service: 'iot',
-        resource: 'thing',
-        resourceName: device.thing.thingName,
-        sep: '/'
-      })
-  };
+  readonly devices?: Array<GreengrassDevice>;
 }
 
 export class DeviceDefinitionVersion extends cdk.Resource implements IDeviceDefinitionVersion {
@@ -57,7 +40,7 @@ export class DeviceDefinitionVersion extends cdk.Resource implements IDeviceDefi
     this.versionArn = version.ref;
   }
 
-  addDevice(device: iot.ICertifiedThing): DeviceDefinitionVersion {
+  addDevice(device: GreengrassDevice): DeviceDefinitionVersion {
     const stack = cdk.Stack.of(this);
     this.devices.push(transformDevice(this, device));
     return this;

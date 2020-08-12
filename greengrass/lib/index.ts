@@ -7,3 +7,4 @@ export * from './function';
 export * from './subscription';
 export * from './connector';
 export * from './connectors';
+export * from './thing';

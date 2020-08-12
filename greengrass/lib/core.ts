@@ -2,7 +2,8 @@ import * as greengrass from '@aws-cdk/aws-greengrass';
 import * as iot from '@philcali-cdk/iot';
 import * as cdk from '@aws-cdk/core';
 import { Tags } from './tag';
-import { lazyHash } from './hash';
+import { GreengrassDevice } from './thing';
+import {  transformDevice } from './types';
 
 export interface ICoreDefinition extends cdk.IResource {
   readonly defintiionId: string;
@@ -16,31 +17,13 @@ export interface ICoreDefintiionVersion extends cdk.IResource {
 
 export interface CoreDefinitionProps {
   readonly name?: string;
-  readonly core?: iot.ICertifiedThing;
+  readonly core?: GreengrassDevice;
   readonly tags?: Tags;
 }
 
 export interface CoreDefinitionVersionProps {
   readonly definition: ICoreDefinition
-  readonly core: iot.ICertifiedThing;
-}
-
-type CoreLike = (
-  greengrass.CfnCoreDefinition.CoreProperty |
-  greengrass.CfnCoreDefinitionVersion.CoreProperty
-);
-
-function transformCore(scope: cdk.Construct, device: iot.ICertifiedThing): CoreLike {
-  return {
-    certificateArn: device.certificate.certificateArn,
-    id: lazyHash(`${scope.node.id}-${device.thing.thingName}`),
-    thingArn: cdk.Stack.of(scope).formatArn({
-      service: 'iot',
-      resource: 'thing',
-      resourceName: device.thing.thingName,
-      sep: '/'
-    })
-  }
+  readonly core: GreengrassDevice;
 }
 
 export class CoreDefinitionVersion extends cdk.Resource implements ICoreDefintiionVersion {
@@ -50,7 +33,7 @@ export class CoreDefinitionVersion extends cdk.Resource implements ICoreDefintii
     super(scope, id);
     const version = new greengrass.CfnCoreDefinitionVersion(this, 'Version', {
       coreDefinitionId: props.definition.defintiionId,
-      cores: [transformCore(this, props.core)]
+      cores: [transformDevice(this, props.core)]
     });
     this.versionArn = version.ref;
   }
@@ -67,7 +50,7 @@ export class CoreDefinition extends cdk.Resource implements ICoreDefinition {
     let initialVersion: greengrass.CfnCoreDefinition.CoreDefinitionVersionProperty | undefined;
     if (props?.core) {
       initialVersion = {
-        cores: [transformCore(this, props.core)]
+        cores: [transformDevice(this, props.core)]
       };
     }
 
