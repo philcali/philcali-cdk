@@ -10,7 +10,8 @@ import { FunctionDefinition, FunctionProps, IFunctionDefinition, IFunctionDefini
 import { ILoggerDefinition, ILoggerDefinitionVersion, LoggerDefinition, LoggerProps } from './logger';
 import { IResourceDefinition, IResourceDefinitionVersion, ResourceDefinition, ResourceProps } from './resource';
 import { ISubscriptionDefinition, ISubscriptionDefinitionVersion, SubscriptionDefinition, SubscriptionProps } from './subscription';
-import { isArrayType, isConnector, isFunction, isLogger, isResource, isSubscription, isThing } from './types';
+import { isArrayType, isConnector, isFunction, isGreengrassThing, isLogger, isResource, isSubscription, isThing } from './types';
+import { GreengrassDevice } from './thing';
 
 export interface IGroup extends cdk.IResource {
   readonly groupId: string;
@@ -23,11 +24,11 @@ export interface IGroupVersion extends cdk.IResource {
 }
 
 type CoreType = (
-  iot.ICertifiedThing | ICoreDefinition | ICoreDefintiionVersion
+  GreengrassDevice | ICoreDefinition | ICoreDefintiionVersion
 );
 
 type DeviceType = (
-  Array<iot.ICertifiedThing> | IDeviceDefinition | IDeviceDefinitionVersion
+  Array<GreengrassDevice> | IDeviceDefinition | IDeviceDefinitionVersion
 );
 
 type ConnectorType = (
@@ -71,14 +72,14 @@ export interface GroupVersionProps extends GreengrassCollectiveProps {
 }
 
 function coreVersionArn(scope: cdk.Construct, core?: CoreType): string | undefined {
-  if (core && isThing(core)) {
+  if (core && (isGreengrassThing(core) || isThing(core))) {
     return new CoreDefinition(scope, 'Core', { core }).versionArn;
   }
   return core?.versionArn;
 }
 
 function deviceVersionArn(scope: cdk.Construct, devices?: DeviceType): string | undefined {
-  if (isArrayType(devices, isThing)) {
+  if (isArrayType(devices, device => (isThing(device) || isGreengrassThing(device)))) {
     return new DeviceDefinition(scope, 'Devices', { devices }).versionArn;
   }
   return devices?.versionArn;
