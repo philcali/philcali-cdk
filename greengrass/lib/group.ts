@@ -94,7 +94,7 @@ function connectorVersionArn(scope: cdk.Construct, connectors?: ConnectorType): 
 
 function functionVersionArn(scope: cdk.Construct, functions?: FunctionType): string | undefined {
   if (isArrayType(functions, isFunction)) {
-    return new FunctionDefinition(scope, 'Fuctions', { functions }).versionArn;
+    return new FunctionDefinition(scope, 'Functions', { functions }).versionArn;
   }
   return functions?.versionArn;
 }

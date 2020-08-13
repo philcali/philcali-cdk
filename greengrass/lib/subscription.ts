@@ -107,7 +107,7 @@ function subscriptionHandle(handle: SubscriptionHandle): string {
   if (isConnector(handle)) {
     return handle.connectorArn;
   } else if (isVersion(handle)) {
-    return `${handle.functionArn}:${handle.version}`;
+    return handle.functionArn;
   } else if (isThing(handle)) {
     return cdk.Stack.of(handle.thing).formatArn({
       service: 'iot',

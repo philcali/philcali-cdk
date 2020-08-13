@@ -27,15 +27,10 @@ export interface FunctionDefinitionProps {
   readonly tags?: Tags;
 }
 
-type FunctionLike = (
-  greengrass.CfnFunctionDefinition.FunctionProperty |
-  greengrass.CfnFunctionDefinitionVersion.FunctionProperty
-);
-
-function transformFunction(scope: cdk.Construct, func: FunctionProps): FunctionLike {
+function transformFunction(scope: cdk.Construct, func: FunctionProps): greengrass.CfnFunctionDefinitionVersion.FunctionProperty {
   return {...func,
-    id: func.id || lazyHash(`${scope.node.id}-${func.version.functionName}-${func.version.version}`),
-    functionArn: func.version.version,
+    id: func.id || lazyHash(func.version.node.path),
+    functionArn: func.version.functionArn,
     functionConfiguration: {...func.config,
       timeout: func.config.timeout?.toSeconds()
     }
@@ -78,11 +73,19 @@ export class FunctionDefinition extends cdk.Resource implements IFunctionDefinit
     if (props?.functions) {
       initialVersion = {
         defaultConfig: props?.defaultConfig,
-        functions: props?.functions.map(func => transformFunction(this, func))
+        functions: props?.functions.map(func => {
+          return {
+            id: func.id || lazyHash(func.version.node.path),
+            functionArn: func.version.functionArn,
+            functionConfiguration: {...func.config,
+              timeout: func.config.timeout?.toSeconds()
+            }
+          };
+        })
       };
     }
 
-    const definition = new greengrass.CfnFunctionDefinition(this, 'Defintiion', {
+    const definition = new greengrass.CfnFunctionDefinition(this, 'Definition', {
       name: props?.name || id,
       tags: props?.tags,
       initialVersion
