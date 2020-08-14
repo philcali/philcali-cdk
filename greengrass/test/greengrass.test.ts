@@ -109,7 +109,7 @@ test('Greengrass group core and function definition', () => {
   expectCDK(stack).to(haveResource("AWS::Greengrass::FunctionDefinition"));
 });
 
-test('Greengrass core, device, connector, and resource definitions', () => {
+test('Greengrass group core, device, connector, and resource definitions', () => {
   const app = new cdk.App();
   const stack = new cdk.Stack(app, "TestStack");
   // WHEN
@@ -131,33 +131,71 @@ test('Greengrass core, device, connector, and resource definitions', () => {
     }),
     id: 'secret-resource'
   };
-  const connector = new greengrass.TwilioNotifications(stack, {
-    version: greengrass.TwilioNotifications.LATEST_VERSION,
-    twilioAccountSid: 'sid',
-    twilioAuthTokenSecretArnResourceId: resource.id,
-    twilioAuthTokenSecretArn: 'arn:blah:blah'
-  });
   const motionSensor = devicePool.create('MotionSensor');
   const group = new greengrass.Group(stack, 'Group', {
     core: corePool.create('CoreDevice'),
     devices: [ motionSensor ],
-    connectors: [ connector ],
-    resources: [ resource ],
+    resources: [ resource ]
+  });
+  // THEN
+  expectCDK(stack).to(haveResource("AWS::Greengrass::Group"));
+  expectCDK(stack).to(haveResource("AWS::IoT::Thing"));
+  expectCDK(stack).to(haveResource("AWS::Greengrass::CoreDefinition"));
+  expectCDK(stack).to(haveResource("AWS::Greengrass::ResourceDefinition"));
+  expectCDK(stack).to(haveResource("AWS::Greengrass::DeviceDefinition"));
+});
+
+test('Greengrass group core and connector definitions', () => {
+  const app = new cdk.App();
+  const stack = new cdk.Stack(app, "TestStack");
+  // WHEN
+  const destination = new s3.Bucket(stack, 'Bucket');
+  const certificates = new iot.S3CertificateAuthority(stack, 'ThingCertAuthority', {
+    destination,
+  });
+  const corePool = new iot.ThingPool(stack, 'CorePool', {
+    document: new greengrass.CoreBasePolicyDocument(stack),
+    certificates
+  });
+  const core = corePool.create('CoreThing');
+  const twilio = new greengrass.TwilioNotifications(stack, {
+    version: greengrass.TwilioNotifications.LATEST_VERSION,
+    twilioAccountSid: 'sid',
+    twilioAuthTokenSecretArnResourceId: 'abc-123',
+    twilioAuthTokenSecretArn: 'arn:blah:blah'
+  });
+  const sns = new greengrass.SNS(stack, {
+    version: greengrass.SNS.LATEST_VERSION,
+    defaultSNSArn: 'arn:sns'
+  });
+  const gpio = new greengrass.RaspberryPiGPIO(stack, {
+    version: greengrass.RaspberryPiGPIO.LATEST_VERSION,
+    gpioMemResourceId: 'efg-456',
+  });
+  const group = new greengrass.Group(stack, 'Group', {
+    core,
+    connectors: [ twilio, sns ],
     subscriptions: [{
       subject: greengrass.TwilioNotifications.OUTPUT_TOPICS.MESSAGE_STATUS,
-      source: connector,
+      source: twilio,
       target: greengrass.Observable.IOT_CLOUD
     }, {
       subject: greengrass.TwilioNotifications.INPUT_TOPICS.MESSAGE_TXT,
-      source: motionSensor,
-      target: connector
+      source: core,
+      target: twilio
+    }, {
+      subject: greengrass.SNS.INPUT_TOPICS.MESSAGE,
+      source: greengrass.Observable.GG_SHADOW,
+      target: sns
+    }, {
+      subject: greengrass.RaspberryPiGPIO.inputWriteTopic(core, 16),
+      source: gpio,
+      target: core
     }]
   });
   // THEN
   expectCDK(stack).to(haveResource("AWS::Greengrass::Group"));
   expectCDK(stack).to(haveResource("AWS::IoT::Thing"));
   expectCDK(stack).to(haveResource("AWS::Greengrass::CoreDefinition"));
-  expectCDK(stack).to(haveResource("AWS::Greengrass::SubscriptionDefinition"));
-  expectCDK(stack).to(haveResource("AWS::Greengrass::ResourceDefinition"));
-  expectCDK(stack).to(haveResource("AWS::Greengrass::DeviceDefinition"));
+  expectCDK(stack).to(haveResource("AWS::Greengrass::ConnectorDefinition"));
 });

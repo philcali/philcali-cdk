@@ -39,7 +39,7 @@ export function isLogger(logger: any): logger is LoggerProps {
 };
 
 export function isResource(resource: any): resource is ResourceProps {
-    return (resource as ResourceProps).name !== undefined;
+    return (resource as ResourceProps).resourceDataContainer !== undefined;
 };
 
 export function isSubscription(subscription: any): subscription is SubscriptionProps {
