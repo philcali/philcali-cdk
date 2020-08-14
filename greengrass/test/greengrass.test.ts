@@ -158,23 +158,37 @@ test('Greengrass group core and connector definitions', () => {
     certificates
   });
   const core = corePool.create('CoreThing');
+  // Twilio connection
   const twilio = new greengrass.TwilioNotifications(stack, {
     version: greengrass.TwilioNotifications.LATEST_VERSION,
     twilioAccountSid: 'sid',
     twilioAuthTokenSecretArnResourceId: 'abc-123',
     twilioAuthTokenSecretArn: 'arn:blah:blah'
   });
+  // SNS connection
   const sns = new greengrass.SNS(stack, {
     version: greengrass.SNS.LATEST_VERSION,
     defaultSNSArn: 'arn:sns'
   });
+  // GPIO connection
   const gpio = new greengrass.RaspberryPiGPIO(stack, {
     version: greengrass.RaspberryPiGPIO.LATEST_VERSION,
     gpioMemResourceId: 'efg-456',
   });
+  // Cloudwatch connection
+  const cloudwatch = new greengrass.CloudWatchMetrics(stack, {
+    version: greengrass.CloudWatchMetrics.LATEST_VERSION,
+    memorySize: 1024,
+    publishInterval: 200,
+    maxMetricsToRetain: 2048
+  });
+  // Demonstrating non construct connector
+  const sitewise = new greengrass.Connector(stack, 6, {
+    'SiteWiseLocalStoragePath': '/var/sitewise'
+  });
   const group = new greengrass.Group(stack, 'Group', {
     core,
-    connectors: [ twilio, sns ],
+    connectors: [ twilio, sns, gpio, cloudwatch, sitewise ],
     subscriptions: [{
       subject: greengrass.TwilioNotifications.OUTPUT_TOPICS.MESSAGE_STATUS,
       source: twilio,
