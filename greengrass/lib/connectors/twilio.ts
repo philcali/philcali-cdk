@@ -5,8 +5,15 @@ import { IsolationMode } from './../function';
 export class TwilioNotifications extends Connector {
   public static VERSIONS = [ 5, 4, 3, 2, 1 ]
   public static LATEST_VERSION = TwilioNotifications.VERSIONS[0];
+  public static INPUT_TOPICS = {
+    MESSAGE_TXT: 'twilio/txt',
+    MESSAGE_CALL: 'twilio/call'
+  };
+  public static OUTPUT_TOPICS = {
+    MESSAGE_STATUS: 'twilio/message/status'
+  }
 
-  constructor(scope: cdk.IResource, props: TwilioNotificationsProps) {
+  constructor(scope: cdk.Construct, props: TwilioNotificationsProps) {
     super(scope, props.version, {
       'TWILIO_ACCOUNT_SID': props.twilioAccountSid,
       'TwilioAuthTokenSecretArn': props.twilioAuthTokenSecretArn,

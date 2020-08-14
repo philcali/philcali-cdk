@@ -83,7 +83,7 @@ export class Connector implements IConnector {
   readonly connectorArn: string
   readonly parameters: any
 
-  constructor(scope: cdk.IResource, version: number, parameters: any) {
+  constructor(scope: cdk.Construct, version: number, parameters: any) {
     this.id = `${this.constructor.name}-${version}` 
     this.connectorArn = cdk.Stack.of(scope).formatArn({
       service: 'greengrass',

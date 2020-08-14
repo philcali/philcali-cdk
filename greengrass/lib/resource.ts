@@ -27,7 +27,7 @@ type ResourceLike = (
 function transformResource(scope: cdk.Construct, resource: ResourceProps): ResourceLike {
   return {
     ...resource,
-    id: resource.id || lazyHash(`${scope.node.id}-${resource.name}`)
+    name: resource.name || lazyHash(`${scope.node.id}-${resource.id}`),
   };
 }
 
@@ -82,9 +82,10 @@ export class ResourceDefinition extends cdk.Resource implements IResourceDefinit
   }
 }
 
+
 export interface ResourceProps {
-  readonly id?: string
-  readonly name: string
+  readonly id: string
+  readonly name?: string
   readonly resourceDataContainer: LocalVolumeResourceData
     | LocalDeviceResourceData
     | S3MachineLearningResourceData
