@@ -30,6 +30,7 @@ export class S3CertificateAuthority extends cdk.Resource implements ICertificate
       effect: iam.Effect.ALLOW,
       actions: [
         'iot:createKeysAndCertificate',
+        'iot:updateCertificate',
         'iot:deleteCertificate'
       ],
       resources: [ '*' ]

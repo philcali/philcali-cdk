@@ -35,13 +35,12 @@ def on_create(event, context):
         contents_to_tar(certs["certificatePem"], tar, prefix + ".pem")
         contents_to_tar(certs["keyPair"]["PrivateKey"], tar, prefix + ".private.key")
         contents_to_tar(certs["keyPair"]["PublicKey"], tar, prefix + ".public.key")
-    s3.upload_file(
-        filename,
-        os.environ["BucketName"],
-        "certs/" + event["ResourceProperties"]["ThingName"] + "/keys.tar.gz")
+    key = "certs/" + event["ResourceProperties"]["ThingName"] + "/keys.tar.gz"
+    s3.upload_file(filename, os.environ["BucketName"], key)
     response_data = {
         "CertificateArn": certs["certificateArn"],
-        "ThingName": event["ResourceProperties"]["ThingName"]
+        "ThingName": event["ResourceProperties"]["ThingName"],
+        "CertKey": key
     }
     return send(event, context, "SUCCESS", response_data, certs["certificateId"])
 
@@ -50,6 +49,10 @@ def on_update(event, context):
 
 def on_delete(event, context):
     iot = boto3.client("iot")
+    iot.update_certificate(
+        certificateId=event["PhysicalResourceId"],
+        newStatus="INACTIVE"
+    )
     iot.delete_certificate(
         certificateId=event["PhysicalResourceId"],
         forceDelete=True
