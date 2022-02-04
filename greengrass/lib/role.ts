@@ -35,7 +35,7 @@ export class GreengrassServiceRole extends iam.Role implements IGreengrassServic
   }
 
   public attachToAccount() {
-    const updateServiceRoleResource = new custom.AwsCustomResource(this, 'AttachToAccount', {
+    new custom.AwsCustomResource(this, 'AttachToAccount', {
       logRetention: logs.RetentionDays.ONE_WEEK,
       policy: {
         statements: [

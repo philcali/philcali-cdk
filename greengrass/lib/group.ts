@@ -1,7 +1,6 @@
 import * as iam from '@aws-cdk/aws-iam';
 import * as greengrass from '@aws-cdk/aws-greengrass';
 import * as cdk from '@aws-cdk/core';
-import * as iot from '@philcali-cdk/iot';
 import { Tags } from './tag';
 import { CoreDefinition, ICoreDefinition, ICoreDefintiionVersion } from './core';
 import { DeviceDefinition, IDeviceDefinition, IDeviceDefinitionVersion } from './devices';
@@ -155,6 +154,7 @@ export class Group extends cdk.Resource implements IGroup {
 }
 
 export class GroupVersion extends cdk.Resource implements IGroupVersion {
+  readonly versionId: string;
   readonly versionArn: string;
   constructor(scope: cdk.Construct, id: string, props: GroupVersionProps) {
     super(scope, id);
@@ -167,6 +167,8 @@ export class GroupVersion extends cdk.Resource implements IGroupVersion {
       loggerDefinitionVersionArn: loggerVersionArn(this, props.loggers),
       resourceDefinitionVersionArn: resourceVersionArn(this, props.resources),
       subscriptionDefinitionVersionArn: subscriptionVersionArn(this, props.subscriptions)
-    })
+    });
+    this.versionId = version.attrId;
+    this.versionArn = version.attrArn;
   }
 }
