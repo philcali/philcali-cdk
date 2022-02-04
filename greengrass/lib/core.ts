@@ -1,5 +1,4 @@
 import * as greengrass from '@aws-cdk/aws-greengrass';
-import * as iot from '@philcali-cdk/iot';
 import * as cdk from '@aws-cdk/core';
 import { Tags } from './tag';
 import { GreengrassDevice } from './thing';

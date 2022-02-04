@@ -1,6 +1,5 @@
 import * as greengrass from '@aws-cdk/aws-greengrass';
 import * as cdk from '@aws-cdk/core';
-import * as iot from '@philcali-cdk/iot';
 import { IVersion } from '@aws-cdk/aws-lambda';
 import { IConnector } from './connector';
 import { Tags } from './tag';

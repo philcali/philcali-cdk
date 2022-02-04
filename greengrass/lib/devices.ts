@@ -1,5 +1,4 @@
 import * as greengrass from '@aws-cdk/aws-greengrass';
-import * as iot from '@philcali-cdk/iot';
 import * as cdk from '@aws-cdk/core';
 import { Tags } from './tag';
 import { GreengrassDevice } from './thing';
@@ -41,7 +40,6 @@ export class DeviceDefinitionVersion extends cdk.Resource implements IDeviceDefi
   }
 
   addDevice(device: GreengrassDevice): DeviceDefinitionVersion {
-    const stack = cdk.Stack.of(this);
     this.devices.push(transformDevice(this, device));
     return this;
   }

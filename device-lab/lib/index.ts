@@ -18,7 +18,14 @@ import {
   WaitTime,
   StateMachine
 } from 'aws-cdk-lib/aws-stepfunctions';
-import { AuthorizationType, CorsOptions, EndpointType, LambdaRestApi, MethodOptions, ResourceOptions, RestApi } from 'aws-cdk-lib/aws-apigateway';
+import { 
+  AuthorizationType,
+  CorsOptions,
+  EndpointType,
+  LambdaRestApi,
+  MethodOptions,
+  RestApi
+} from 'aws-cdk-lib/aws-apigateway';
 import { DynamoEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
 
 type InvokeSteps = {[key: string]: LambdaInvoke};
@@ -46,7 +53,7 @@ export class DeviceLabApiScope extends PolicyStatement {
   constructor(props: DeviceLabApiScopeProps) {
     let resources: string[] = [];
     props.scopes.forEach(scope => {
-      resources.concat(DeviceLabApiScope.toResourceName(props.stageName || 'v1', scope));
+      resources = resources.concat(DeviceLabApiScope.toResourceName(props.stageName || 'v1', scope));
     })
     super({
       effect: Effect.ALLOW,

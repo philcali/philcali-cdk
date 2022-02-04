@@ -2,7 +2,6 @@ import * as cdk from '@aws-cdk/core';
 import { GreengrassDevice } from '../thing';
 import { isGreengrassThing } from '../types';
 import { Connector } from './../connector';
-import { IsolationMode } from './../function';
 
 export class RaspberryPiGPIO extends Connector {
   public static VERSIONS = [ 3, 2, 1 ]

@@ -1,7 +1,7 @@
 import * as iot from '@aws-cdk/aws-iot';
 import * as iam from '@aws-cdk/aws-iam';
 import * as cdk from '@aws-cdk/core';
-import { IAttachable, ICertificate, Certificate } from './certificate';
+import { IAttachable, ICertificate } from './certificate';
 
 type PolicyProps = iot.CfnPolicyProps;
 

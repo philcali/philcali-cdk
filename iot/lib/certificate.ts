@@ -1,6 +1,6 @@
 import * as iot from '@aws-cdk/aws-iot';
 import * as cdk from '@aws-cdk/core';
-import { IPolicy, Policy } from './policy';
+import { IPolicy } from './policy';
 import { IThing, ICertifiedThing } from './thing';
 
 type CertificateProps = iot.CfnCertificateProps;
