@@ -12,8 +12,26 @@
     "device",
     "lab"
   ],
+  "jsii": {
+    "outdir": "dist",
+    "versionFormat": "full",
+    "targets": {
+      "java": {
+        "package": "me.philcali.device.pool.lab",
+        "maven": {
+          "groupId": "me.philcali",
+          "artifactId": "device-lab"
+        }
+      },
+      "python": {
+        "distName": "philcali.devicelab",
+        "module": "philcali.devicelab"
+      }
+    }
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "jsii",
+    "package": "jsii-pacmak",
     "watch": "tsc -w",
     "test": "jest"
   },
@@ -27,8 +45,10 @@
     "@types/jest": "^26.0.10",
     "@types/node": "10.17.27",
     "aws-cdk-lib": "2.10.0",
-    "constructs": "^10.0.0",
     "jest": "^26.4.2",
+    "jsii": "^1.52.1",
+    "jsii-pacmak": "^1.52.1",
+    "constructs": "10.0.0",
     "ts-jest": "^26.2.0",
     "typescript": "~3.9.7"
   },

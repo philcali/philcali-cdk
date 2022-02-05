@@ -4,3 +4,5 @@ node_modules
 .jsii
 dist
 tsconfig.json
+
+*.tsbuildinfo

@@ -69,29 +69,43 @@ export class DeviceLabApiScope extends PolicyStatement {
     switch (scope) {
       case Scope.WRITE:
         method = '*';
+        paths.push("/*");
+        break;
       case Scope.READ:
         paths.push("/*");
         break;
       case Scope.WRITE_DEVICE_POOL:
         method = '*';
+        paths.push('/pools');
+        paths.push('/pools/*');
+        break;
       case Scope.READ_DEVICE_POOL:
         paths.push('/pools');
         paths.push('/pools/*');
         break;
       case Scope.WRITE_DEVICE:
         method = '*';
+        paths.push('/pools/*/devices');
+        paths.push('/pools/*/devices/*/');
+        break;
       case Scope.READ_DEVICE:
         paths.push('/pools/*/devices');
         paths.push('/pools/*/devices/*/');
         break;
       case Scope.WRITE_PROVISION:
         method = '*';
+        paths.push(`/pools/*/provisions`);
+        paths.push(`/pools/*/provisions/*/`);
+        break;
       case Scope.READ_PROVISION:
         paths.push(`/pools/*/provisions`);
         paths.push(`/pools/*/provisions/*/`);
         break;
       case Scope.WRITE_RESERVATION:
         method = '*';
+        paths.push(`/pools/*/provisions/*/reservations`);
+        paths.push(`/pools/*/provisions/*/reservations/*/`);
+        break;
       case Scope.READ_RESERVATION:
         paths.push(`/pools/*/provisions/*/reservations`);
         paths.push(`/pools/*/provisions/*/reservations/*/`);
