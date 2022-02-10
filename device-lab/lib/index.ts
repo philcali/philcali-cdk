@@ -247,7 +247,7 @@ export class DeviceLab extends Construct {
     });
 
     const eventsFunction = new Function(this, 'DeviceLabEventFunction', {
-      handler: 'me.philcali.device.pool.service.DevicePoolEvents::handleRequest',
+      handler: 'me.philcali.device.pool.service.DevicePoolEvents::handleDatabaseEvents',
       code: props.workflowCode,
       environment: {
         TABLE_NAME: this.table.tableName,
