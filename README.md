@@ -1,5 +1,8 @@
 # CDK Collections
 
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/philcali/philcali-cdk.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/philcali/philcali-cdk/alerts/)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/philcali/philcali-cdk.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/philcali/philcali-cdk/alerts/)
+
 Little helper constructs for common things.
 
 ## Static Website
