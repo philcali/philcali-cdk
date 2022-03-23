@@ -16,7 +16,7 @@ test('Managed DeviceLab', () => {
     const objectKeyParam = new CfnParameter(stack, 'objectKeyParam', {
         default: 'objectKeyParam'
     })
-    new lab.DeviceLab(stack, 'MyTestConstruct', {
+    const deviceLab = new lab.DeviceLab(stack, 'MyTestConstruct', {
         serviceCode: Code.fromCfnParameters({
             bucketNameParam,
             objectKeyParam
@@ -26,6 +26,28 @@ test('Managed DeviceLab', () => {
             objectKeyParam
         })
     });
+
+    deviceLab.addDevicePool({
+        name: 'MyPool',
+        description: "This is the human readable name of the pool",
+        poolType: lab.DevicePoolType.MANAGED,
+        lockOptions: {
+            enabled: true,
+            duration: cdk.Duration.hours(1)
+        }
+    });
+
+    deviceLab.addDevicePool({
+        name: 'MyNodes',
+        poolType: lab.DevicePoolType.UNMANAGED,
+        integration: new lab.SSMDevicePoolIntegration(stack, {
+            code: Code.fromCfnParameters({
+                bucketNameParam,
+                objectKeyParam
+            })
+        })
+    })
+
     // THEN
     const template = Template.fromStack(stack);
 
