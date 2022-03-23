@@ -6,12 +6,13 @@ import { Code, Function, Runtime, StartingPosition } from "aws-cdk-lib/aws-lambd
 import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Choice, Condition, Pass, StateMachine, TaskInput, Wait, WaitTime } from "aws-cdk-lib/aws-stepfunctions";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
-import { AwsCustomResource, AwsCustomResourcePolicy } from "aws-cdk-lib/custom-resources";
+import { AwsCustomResource, AwsCustomResourcePolicy, PhysicalResourceId } from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
 import { IDevicePoolIntegration, DevicePoolProps, DevicePoolType, DevicePoolEndpointProps } from "./pools/device-pool";
 
 type InvokeSteps = {[key: string]: LambdaInvoke};
 type FunctionStep = {[key: string]: Function};
+type IntegrationCache = {[key: string]: IDevicePoolIntegration}
 
 export interface DeviceLabTableProps {
   readonly tableName?: string,
@@ -48,6 +49,7 @@ export class DeviceLab extends Construct {
   readonly invokeSteps: InvokeSteps;
   readonly controlPlane: RestApi;
   readonly obtainDeviceFunction: Function;
+  private readonly integrations: IntegrationCache = {};
 
   constructor(scope: Construct, id: string, props: DeviceLabProps) {
     super(scope, id);
@@ -214,7 +216,10 @@ export class DeviceLab extends Construct {
   }
 
   addIntegration(integration: IDevicePoolIntegration) {
-    integration.associateToLab(this);
+    if (!this.integrations[integration.endpoint.uri]) {
+      integration.associateToLab(this);
+      this.integrations[integration.endpoint.uri] = integration;
+    }
   }
 
   addDevicePool(devicePool: DevicePoolProps) {
@@ -244,6 +249,7 @@ export class DeviceLab extends Construct {
     }
     new AwsCustomResource(this, "Install" + devicePool.name, {
       onCreate: {
+        physicalResourceId: PhysicalResourceId.of(devicePool.name),
         service: 'DynamoDB',
         action: 'PutItem',
         parameters: {
@@ -257,6 +263,17 @@ export class DeviceLab extends Construct {
             lockOptions,
             createdAt: { N: (Date.now() / 1000).toFixed() },
             updatedAt: { N: (Date.now() / 1000).toFixed() }
+          }
+        }
+      },
+      onDelete: {
+        service: 'DynamoDB',
+        action: 'DeleteItem',
+        parameters: {
+          TableName: this.table.tableName,
+          Key: {
+            PK: { S: Stack.of(this).account + ":pool" },
+            SK: { S: devicePool.name }
           }
         }
       },

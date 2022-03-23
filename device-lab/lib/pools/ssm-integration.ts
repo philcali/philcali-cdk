@@ -7,9 +7,9 @@ import { LambdaDevicePoolIntegration } from "./lambda-integration";
 
 export interface SSMDevicePoolIntegrationProps {
     readonly code: Code,
-    readonly locking ?: boolean,
-    readonly lockingDuration ?: Duration,
-    readonly provisionStrategy ?: string,
+    readonly locking?: boolean,
+    readonly lockingDuration?: Duration,
+    readonly provisionStrategy?: string,
 }
 
 export class SSMDevicePoolIntegration extends LambdaDevicePoolIntegration {
