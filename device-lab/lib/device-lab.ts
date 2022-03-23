@@ -6,9 +6,12 @@ import { Code, Function, Runtime, StartingPosition } from "aws-cdk-lib/aws-lambd
 import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { Choice, Condition, Pass, StateMachine, TaskInput, Wait, WaitTime } from "aws-cdk-lib/aws-stepfunctions";
 import { LambdaInvoke } from "aws-cdk-lib/aws-stepfunctions-tasks";
+import { AwsCustomResource, AwsCustomResourcePolicy } from "aws-cdk-lib/custom-resources";
 import { Construct } from "constructs";
+import { IDevicePoolIntegration, DevicePoolProps, DevicePoolType, DevicePoolEndpointProps } from "./pools/device-pool";
 
 type InvokeSteps = {[key: string]: LambdaInvoke};
+type FunctionStep = {[key: string]: Function};
 
 export interface DeviceLabTableProps {
   readonly tableName?: string,
@@ -44,6 +47,7 @@ export class DeviceLab extends Construct {
   readonly provisioningWorkflow: StateMachine;
   readonly invokeSteps: InvokeSteps;
   readonly controlPlane: RestApi;
+  readonly obtainDeviceFunction: Function;
 
   constructor(scope: Construct, id: string, props: DeviceLabProps) {
     super(scope, id);
@@ -88,6 +92,7 @@ export class DeviceLab extends Construct {
     ];
 
     const invokeSteps: InvokeSteps = {};
+    const functionSteps: FunctionStep = {};
     // Create all lambda based invoke steps
     workflowSteps.forEach(stepName => {
       const lambdaFunction = new Function(this, stepName + "Function", {
@@ -101,8 +106,9 @@ export class DeviceLab extends Construct {
         timeout: Duration.minutes(5),
       });
       lambdaFunction.addToRolePolicy(tablePolicy);
+      functionSteps[stepName] = lambdaFunction;
       invokeSteps[stepName] = new LambdaInvoke(this, `${stepName}Step`, {
-      lambdaFunction,
+        lambdaFunction,
         retryOnServiceExceptions: true,
         outputPath: '$.Payload',
         payload: TaskInput.fromObject({
@@ -111,6 +117,9 @@ export class DeviceLab extends Construct {
         })
       });
     });
+
+    this.obtainDeviceFunction = functionSteps['obtainDevices'];
+
     // Apply error catch to all non failure steps
     for (let stepName in invokeSteps) {
       if (stepName !== failProvision) {
@@ -201,6 +210,61 @@ export class DeviceLab extends Construct {
         authorizationType: AuthorizationType.IAM
       },
       defaultCorsPreflightOptions: props.apiProps?.defaultCorsPreflightOptions
+    });
+  }
+
+  addIntegration(integration: IDevicePoolIntegration) {
+    integration.associateToLab(this);
+  }
+
+  addDevicePool(devicePool: DevicePoolProps) {
+    let endpoint: {[key: string]: any} = { M: {} };
+    let lockOptions: {[key: string]: any} = {
+      M: {
+          "enabled": { BOOL: devicePool.lockOptions?.enabled || false }
+      }
+    };
+    if (devicePool.integration) {
+      if (devicePool.poolType === DevicePoolType.MANAGED) {
+        throw new Error(`Trying to set an endpoint on a ${devicePool.poolType} pool ${devicePool.name}`);
+      }
+      let endpointObject: DevicePoolEndpointProps;
+      if ("associateToLab" in devicePool.integration) {
+        devicePool.integration.associateToLab(this);
+        endpointObject = devicePool.integration.endpoint;
+      } else {
+        endpointObject = devicePool.integration;
+      }
+      endpoint.M['type'] = { S: endpointObject.endpointType };
+      endpoint.M['uri'] = { S: endpointObject.uri };
+    }
+    if (devicePool.lockOptions) {
+      lockOptions.M['enabled'] = { BOOL: devicePool.lockOptions.enabled || false };
+      lockOptions.M['duration'] = { N: (devicePool.lockOptions.duration || Duration.hours(1)).toSeconds.toString() };
+    }
+    new AwsCustomResource(this, "Install" + devicePool.name, {
+      onCreate: {
+        service: 'DynamoDB',
+        action: 'PutItem',
+        parameters: {
+          TableName: this.table.tableName,
+          Item: {
+            PK: { S: Stack.of(this).account + ":pool" },
+            SK: { S: devicePool.name },
+            description: { S: devicePool.description || 'Installed device pool for ' + devicePool.name },
+            type: { S: devicePool.poolType || DevicePoolType.MANAGED },
+            endpoint,
+            lockOptions,
+            createdAt: { N: (Date.now() / 1000).toFixed() },
+            updatedAt: { N: (Date.now() / 1000).toFixed() }
+          }
+        }
+      },
+      policy: AwsCustomResourcePolicy.fromSdkCalls({
+        resources: [
+          this.table.tableArn
+        ]
+      })
     });
   }
 }
