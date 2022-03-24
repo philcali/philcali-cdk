@@ -243,12 +243,12 @@ export class DeviceLab extends Construct {
       } else {
         endpointObject = devicePool.integration;
       }
-      endpoint.M['type'] = { S: endpointObject.endpointType.toString() };
+      endpoint.M['type'] = { S: endpointObject.endpointType };
       endpoint.M['uri'] = { S: endpointObject.uri };
     }
     if (devicePool.lockOptions) {
       lockOptions.M['enabled'] = { BOOL: devicePool.lockOptions.enabled || false };
-      lockOptions.M['duration'] = { N: (devicePool.lockOptions.duration || Duration.hours(1)).toSeconds.toString() };
+      lockOptions.M['duration'] = { N: (devicePool.lockOptions.duration || Duration.hours(1)).toSeconds().toString() };
     }
     new AwsCustomResource(this, "Install" + devicePool.name, {
       onCreate: {
@@ -261,7 +261,7 @@ export class DeviceLab extends Construct {
             PK: { S: Stack.of(this).account + ":pool" },
             SK: { S: devicePool.name },
             description: { S: devicePool.description || 'Installed device pool for ' + devicePool.name },
-            type: { S: (devicePool.poolType || DevicePoolType.MANAGED).toString() },
+            type: { S: (devicePool.poolType || DevicePoolType.MANAGED) },
             endpoint,
             lockOptions,
           }
