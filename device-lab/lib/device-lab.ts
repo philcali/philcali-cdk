@@ -243,7 +243,7 @@ export class DeviceLab extends Construct {
       } else {
         endpointObject = devicePool.integration;
       }
-      endpoint.M['type'] = { S: endpointObject.endpointType };
+      endpoint.M['type'] = { S: endpointObject.endpointType.toString() };
       endpoint.M['uri'] = { S: endpointObject.uri };
     }
     if (devicePool.lockOptions) {
@@ -261,7 +261,7 @@ export class DeviceLab extends Construct {
             PK: { S: Stack.of(this).account + ":pool" },
             SK: { S: devicePool.name },
             description: { S: devicePool.description || 'Installed device pool for ' + devicePool.name },
-            type: { S: devicePool.poolType || DevicePoolType.MANAGED },
+            type: { S: (devicePool.poolType || DevicePoolType.MANAGED).toString() },
             endpoint,
             lockOptions,
           }
