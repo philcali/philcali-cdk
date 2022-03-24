@@ -5,11 +5,15 @@ import { Construct } from "constructs";
 import { DeviceLab } from "../device-lab";
 import { LambdaDevicePoolIntegration } from "./lambda-integration";
 
+export enum ProvisionStrategy {
+    CYCLIC
+}
+
 export interface SSMDevicePoolIntegrationProps {
     readonly code: Code,
     readonly locking?: boolean,
     readonly lockingDuration?: Duration,
-    readonly provisionStrategy?: string,
+    readonly provisionStrategy?: ProvisionStrategy,
 }
 
 export class SSMDevicePoolIntegration extends LambdaDevicePoolIntegration {
@@ -25,7 +29,7 @@ export class SSMDevicePoolIntegration extends LambdaDevicePoolIntegration {
                 environment: {
                     "LOCKING": (props.locking || false).toString(),
                     "LOCKING_DURATION": (props.lockingDuration || Duration.seconds(15)).toSeconds().toString(),
-                    "PROVISION_STRATEGY": (props.provisionStrategy || "CYCLIC")
+                    "PROVISION_STRATEGY": (props.provisionStrategy || ProvisionStrategy.CYCLIC).toString()
                 }
             })
         });

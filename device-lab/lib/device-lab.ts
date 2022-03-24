@@ -131,8 +131,9 @@ export class DeviceLab extends Construct {
       }
     }
 
+    const scaliingNode = new Pass(this, 'scalingEntry');
     const definition = invokeSteps['startProvision']
-      .next(new Pass(this, 'scalingEntry'))
+      .next(scaliingNode)
       .next(new Choice(this, 'Is Managed?')
         .when(Condition.stringEquals("$.poolType", "UNMANAGED"), invokeSteps['obtainDevices'])
         .otherwise(invokeSteps['createReservation'])
@@ -141,7 +142,9 @@ export class DeviceLab extends Construct {
           .when(Condition.booleanEquals('$.done', true), invokeSteps['finishProvision'])
           .otherwise(new Wait(this, 'waitLoop', {
             time: WaitTime.duration(props.workflowProps?.waitTime || Duration.seconds(5))
-          }))));
+          }))
+          .afterwards()
+          .next(scaliingNode)));
 
     this.invokeSteps = invokeSteps;
     this.provisioningWorkflow = new StateMachine(this, 'ProvisioningWorkflow', {
@@ -251,7 +254,7 @@ export class DeviceLab extends Construct {
       onCreate: {
         physicalResourceId: PhysicalResourceId.of(devicePool.name),
         service: 'DynamoDB',
-        action: 'PutItem',
+        action: 'putItem',
         parameters: {
           TableName: this.table.tableName,
           Item: {
@@ -261,14 +264,13 @@ export class DeviceLab extends Construct {
             type: { S: devicePool.poolType || DevicePoolType.MANAGED },
             endpoint,
             lockOptions,
-            createdAt: { N: (Date.now() / 1000).toFixed() },
-            updatedAt: { N: (Date.now() / 1000).toFixed() }
           }
         }
       },
       onDelete: {
+        physicalResourceId: PhysicalResourceId.of(devicePool.name),
         service: 'DynamoDB',
-        action: 'DeleteItem',
+        action: 'deleteItem',
         parameters: {
           TableName: this.table.tableName,
           Key: {
