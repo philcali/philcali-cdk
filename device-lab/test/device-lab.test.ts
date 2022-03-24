@@ -59,5 +59,20 @@ test('Managed DeviceLab', () => {
     });
     template.hasResourceProperties('AWS::StepFunctions::StateMachine', {
         StateMachineName: 'DeviceLabWorkflow'
-    })
+    });
+
+    const pools = template.findResources("Custom::AWS");
+    // Catch contentious properties at build time
+    expect(Object.keys(pools)).toHaveLength(2);
+    for (let key in pools) {
+        let json = JSON.stringify(pools[key]['Properties']['Create']);
+        if (key.match(/MyPool/)) {
+            expect(json).toMatch(/\\"type\\":{\\"S\\":\\"MANAGED\\"}/);
+            expect(json).toMatch(/\\"duration\\":{\\"N\\":\\"3600\\"}/);
+        }
+        if (key.match(/MyNodes/)) {
+            expect(json).toMatch(/\\"type\\":{\\"S\\":\\"UNMANAGED\\"}/)
+            expect(json).toMatch(/\\"type\\":{\\"S\\":\\"LAMBDA\\"}/)
+        }
+    }
 });

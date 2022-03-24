@@ -6,7 +6,7 @@ import { DeviceLab } from "../device-lab";
 import { LambdaDevicePoolIntegration } from "./lambda-integration";
 
 export enum ProvisionStrategy {
-    CYCLIC
+    CYCLIC = "CYCLIC"
 }
 
 export interface SSMDevicePoolIntegrationProps {
@@ -29,7 +29,7 @@ export class SSMDevicePoolIntegration extends LambdaDevicePoolIntegration {
                 environment: {
                     "LOCKING": (props.locking || false).toString(),
                     "LOCKING_DURATION": (props.lockingDuration || Duration.seconds(15)).toSeconds().toString(),
-                    "PROVISION_STRATEGY": (props.provisionStrategy || ProvisionStrategy.CYCLIC).toString()
+                    "PROVISION_STRATEGY": (props.provisionStrategy || ProvisionStrategy.CYCLIC)
                 }
             })
         });

@@ -2,13 +2,13 @@ import { Duration } from "aws-cdk-lib"
 import { DeviceLab } from "../device-lab";
 
 export enum DevicePoolType {
-    MANAGED,
-    UNMANAGED
+    MANAGED = "MANAGED",
+    UNMANAGED = "UNMANAGED"
 }
 
 export enum DevicePoolEndpointType {
-    HTTP,
-    LAMBDA
+    HTTP = "HTTP",
+    LAMBDA = "LAMBDA"
 }
 
 export interface DevicePoolEndpointProps {
