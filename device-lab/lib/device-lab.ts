@@ -131,6 +131,9 @@ export class DeviceLab extends Construct {
       }
     }
 
+    const waitNode = new Wait(this, 'waitLoop', {
+      time: WaitTime.duration(props.workflowProps?.waitTime || Duration.seconds(5))
+    });
     const scaliingNode = new Pass(this, 'scalingEntry');
     const definition = invokeSteps['startProvision']
       .next(scaliingNode)
@@ -139,12 +142,8 @@ export class DeviceLab extends Construct {
         .otherwise(invokeSteps['createReservation'])
         .afterwards()
         .next(new Choice(this, 'Is Done?')
-          .when(Condition.booleanEquals('$.done', true), invokeSteps['finishProvision'])
-          .otherwise(new Wait(this, 'waitLoop', {
-            time: WaitTime.duration(props.workflowProps?.waitTime || Duration.seconds(5))
-          }))
-          .afterwards()
-          .next(scaliingNode)));
+          .when(Condition.booleanEquals('$.done', false), waitNode.next(scaliingNode))
+          .otherwise(invokeSteps['finishProvision'])));
 
     this.invokeSteps = invokeSteps;
     this.provisioningWorkflow = new StateMachine(this, 'ProvisioningWorkflow', {
