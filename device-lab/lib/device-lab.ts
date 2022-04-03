@@ -125,6 +125,13 @@ export class DeviceLab extends Construct {
     // Apply error catch to all non failure steps
     for (let stepName in invokeSteps) {
       if (stepName !== failProvision) {
+        invokeSteps[stepName].addRetry({
+          errors: [
+            'me.philcali.device.pool.service.exception.RetryableException'
+          ],
+          backoffRate: 2,
+          maxAttempts: 5
+        });
         invokeSteps[stepName].addCatch(invokeSteps[failProvision], {
           resultPath: '$.error'
         });
