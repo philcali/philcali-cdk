@@ -5,6 +5,8 @@ import { Construct } from "constructs";
 import { DeviceLab } from "../device-lab";
 import { LambdaDevicePoolIntegration } from "./lambda-integration";
 
+const DEFAULT_MEMORY_SIZE = 512;
+
 export enum ProvisionStrategy {
     CYCLIC = "CYCLIC"
 }
@@ -14,6 +16,7 @@ export interface SSMDevicePoolIntegrationProps {
     readonly locking?: boolean,
     readonly lockingDuration?: Duration,
     readonly provisionStrategy?: ProvisionStrategy,
+    readonly functionMemorySize?: number,
 }
 
 export class SSMDevicePoolIntegration extends LambdaDevicePoolIntegration {
@@ -21,7 +24,7 @@ export class SSMDevicePoolIntegration extends LambdaDevicePoolIntegration {
     constructor(scope: Construct, props: SSMDevicePoolIntegrationProps) {
         super({
             lambdaFunction : new Function(scope, "SSMDevicePoolIntegration", {
-                memorySize: 512,
+                memorySize: props.functionMemorySize || DEFAULT_MEMORY_SIZE,
                 timeout: Duration.minutes(1),
                 handler: "me.philcali.device.pool.service.unmanaged.ObtainDevicesSSM::handleRequest",
                 code: props.code,

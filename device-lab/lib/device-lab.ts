@@ -14,6 +14,8 @@ type InvokeSteps = {[key: string]: LambdaInvoke};
 type FunctionStep = {[key: string]: Function};
 type IntegrationCache = {[key: string]: IDevicePoolIntegration}
 
+const DEFAULT_MEMORY_SIZE = 512;
+
 export interface DeviceLabTableProps {
   readonly tableName?: string,
   readonly billingMode?: BillingMode,
@@ -40,6 +42,7 @@ export interface DeviceLabProps {
   readonly workflowProps?: DeviceLabWorkflowProps,
   readonly apiProps?: DeviceLabApiProps,
   readonly serviceCode: Code,
+  readonly functionMemorySize?: number,
   readonly workflowCode: Code
 }
 
@@ -103,7 +106,7 @@ export class DeviceLab extends Construct {
         environment: {
           TABLE_NAME: this.table.tableName
         },
-        memorySize: 512,
+        memorySize: props.functionMemorySize || DEFAULT_MEMORY_SIZE,
         runtime: Runtime.JAVA_11,
         timeout: Duration.minutes(5),
       });
@@ -166,7 +169,7 @@ export class DeviceLab extends Construct {
         TABLE_NAME: this.table.tableName,
         WORKFLOW_ID: this.provisioningWorkflow.stateMachineArn
       },
-      memorySize: 512,
+      memorySize: props.functionMemorySize || DEFAULT_MEMORY_SIZE,
       timeout: Duration.minutes(5),
       runtime: Runtime.JAVA_11
     });
@@ -201,7 +204,7 @@ export class DeviceLab extends Construct {
         TABLE_NAME: this.table.tableName,
         API_VERSION: 'V1'
       },
-      memorySize: 512,
+      memorySize: props.functionMemorySize || DEFAULT_MEMORY_SIZE,
       runtime: Runtime.JAVA_11,
       timeout: Duration.seconds(30),
     });
