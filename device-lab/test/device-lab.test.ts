@@ -48,6 +48,17 @@ test('Managed DeviceLab', () => {
         })
     })
 
+    deviceLab.addDevicePool({
+        name: 'IotPool',
+        poolType: lab.DevicePoolType.UNMANAGED,
+        integration: new lab.IotDevicePoolIntegration(stack, {
+            code: Code.fromCfnParameters({
+                bucketNameParam,
+                objectKeyParam
+            })
+        })
+    })
+
     // THEN
     const template = Template.fromStack(stack);
 
@@ -63,7 +74,7 @@ test('Managed DeviceLab', () => {
 
     const pools = template.findResources("Custom::AWS");
     // Catch contentious properties at build time
-    expect(Object.keys(pools)).toHaveLength(2);
+    expect(Object.keys(pools)).toHaveLength(3);
     for (let key in pools) {
         let json = JSON.stringify(pools[key]['Properties']['Create']);
         if (key.match(/MyPool/)) {
@@ -71,6 +82,10 @@ test('Managed DeviceLab', () => {
             expect(json).toMatch(/\\"duration\\":{\\"N\\":\\"3600\\"}/);
         }
         if (key.match(/MyNodes/)) {
+            expect(json).toMatch(/\\"type\\":{\\"S\\":\\"UNMANAGED\\"}/)
+            expect(json).toMatch(/\\"type\\":{\\"S\\":\\"LAMBDA\\"}/)
+        }
+        if (key.match(/IotPool/)) {
             expect(json).toMatch(/\\"type\\":{\\"S\\":\\"UNMANAGED\\"}/)
             expect(json).toMatch(/\\"type\\":{\\"S\\":\\"LAMBDA\\"}/)
         }

@@ -95,8 +95,36 @@ deviceLab.addDevicePool({
     name: 'pi-cameras',
     poolType: DevicePoolType.UNMANAGED,
     integration: new SSMDevicePoolIntegration(this, {
+        // Locking parameters will lock the pool / ThingGroup while provisioning.
+        // Use this in conjunction with the pool lock options to lock provisioned devices for a duration
+        // Default: false
         locking: true,
         lockingDuration: Duration.seconds(30),
+        code // Pull in the jars from maven or some other source
+    })
+})
+```
+
+### Iot Integration
+
+Direct integration with AWS Iot  exists as a `Lambda`. This means that
+a device pool construct is mapped to categorized Things in a Thing Group.
+When clients request provisioning through the control plane, it'll return
+adapted resources from AWS IoT. Taking advantage of this integration is as
+simple as using the `IotDevicePoolIntegration`.
+
+``` javascript
+deviceLab.addDevicePool({
+    name: `ParentGroup`,
+    poolType: DevicePoolType.UNMANAGED,
+    integration: new IotDevicePoolIntegration(this, {
+        // Locking parameters will lock the pool / ThingGroup while provisioning.
+        // Use this in conjunction with the pool lock options to lock provisioned devices for a duration
+        // Default: false
+        locking: true,
+        lockingDuration: Duration.seconds(30),
+        // List things belonging to child Thing Groups. Default: true
+        recursive: false,
         code // Pull in the jars from maven or some other source
     })
 })
