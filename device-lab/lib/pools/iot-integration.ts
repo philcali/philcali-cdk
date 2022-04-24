@@ -23,7 +23,7 @@ export class IotDevicePoolIntegration extends LambdaDevicePoolIntegration {
                 runtime: Runtime.JAVA_11,
                 timeout: Duration.minutes(1),
                 code: props.code,
-                handler: 'me.philcali.device.pool.service.unmanaged.ObtainDevicesIot::handleRequest',
+                handler: 'me.philcali.device.pool.service.unmanaged.UnmanagedHandlerIot::handleRequest',
                 environment: {
                     'ENABLE_RECURSION': (props.recursive || true).toString(),
                     'ENABLE_LOCKING': (props.locking || false).toString(),
